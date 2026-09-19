@@ -47,6 +47,25 @@ public class ProductoService {
         return productoRepository.save(productoExistente);
     }
 
+    public Producto descontarStock(Long id, Integer cantidad) {
+        Producto producto = buscarProductoPorId(id);
+
+        if (cantidad == null || cantidad <= 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La cantidad debe ser mayor que 0");
+        }
+
+        if (producto.getStock() < cantidad) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Stock insuficiente");
+        }
+
+        producto.setStock(producto.getStock() - cantidad);
+        return productoRepository.save(producto);
+    }
+
     public void eliminarProducto(Long id) {
 
         if (!productoRepository.existsById(id)) {
