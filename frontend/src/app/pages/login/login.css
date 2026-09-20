@@ -1,0 +1,48 @@
+﻿main {
+  max-width: 40rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  margin-top: 0;
+}
+
+a {
+  color: #185abd;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+button {
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: #185abd;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid #1f2937;
+  outline-offset: 3px;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.error {
+  color: #b91c1c;
+}

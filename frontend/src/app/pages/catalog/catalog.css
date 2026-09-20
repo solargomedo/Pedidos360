@@ -1,0 +1,113 @@
+﻿main {
+  max-width: 56rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  margin-top: 0;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+caption {
+  text-align: left;
+  margin-bottom: 0.75rem;
+}
+
+th,
+td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #d1d5db;
+  text-align: left;
+}
+
+th {
+  background: #f3f4f6;
+}
+
+.number {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+a {
+  color: #185abd;
+}
+
+a:focus-visible {
+  outline: 3px solid #1f2937;
+  outline-offset: 3px;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+section {
+  margin-bottom: 1.5rem;
+}
+
+fieldset {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 24rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+input,
+button {
+  padding: 0.65rem;
+  border: 1px solid #9ca3af;
+  border-radius: 0.25rem;
+  font: inherit;
+}
+
+input {
+  min-width: 0;
+}
+
+button {
+  background: #185abd;
+  color: white;
+  cursor: pointer;
+}
+
+button.danger {
+  background: #b91c1c;
+}
+
+button:disabled,
+fieldset:disabled button {
+  opacity: 0.6;
+  cursor: default;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: 3px solid #1f2937;
+  outline-offset: 3px;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.success {
+  color: #166534;
+}

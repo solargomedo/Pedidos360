@@ -1,0 +1,82 @@
+﻿<main>
+  <h1>Catálogo</h1>
+
+  @if (isAdmin()) {
+    <section aria-labelledby="producto-form-title">
+      <h2 id="producto-form-title">{{ editingId === null ? 'Nuevo producto' : 'Editar producto #' + editingId }}</h2>
+      <form #productoForm="ngForm" (ngSubmit)="saveProduct(productoForm)">
+        <fieldset [disabled]="saving() || loading()">
+          <label for="nombre">Nombre</label>
+          <input id="nombre" name="nombre" required [(ngModel)]="nombre" />
+          <label for="precio">Precio</label>
+          <input id="precio" name="precio" type="number" step="any" required [(ngModel)]="precio" />
+          <label for="stock">Stock</label>
+          <input id="stock" name="stock" type="number" step="any" required [(ngModel)]="stock" />
+          <button type="submit" [disabled]="productoForm.invalid">
+            {{ editingId === null ? 'Crear producto' : 'Guardar cambios' }}
+          </button>
+          @if (editingId !== null) {
+            <button type="button" (click)="resetForm(productoForm)">Cancelar edición</button>
+          }
+        </fieldset>
+      </form>
+    </section>
+  }
+  @if (roleError()) {
+    <p class="error" role="alert">{{ roleError() }}</p>
+  }
+  @if (errorMessage()) {
+    <p class="error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="success" role="status">{{ successMessage() }}</p>
+  }
+  @if (saving()) {
+    <p role="status">Guardando cambios...</p>
+  }
+
+  @if (loading()) {
+    <p role="status">Cargando catálogo...</p>
+  } @else if (productos().length || !errorMessage()) {
+    <div class="table-container">
+      <table>
+        <caption>Productos disponibles</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Producto</th>
+            <th scope="col" class="number">Precio</th>
+            <th scope="col" class="number">Stock</th>
+            @if (isAdmin()) {
+              <th scope="col">Acciones</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (producto of productos(); track producto.id) {
+            <tr>
+              <td>{{ producto.id }}</td>
+              <td>{{ producto.nombre }}</td>
+              <td class="number">{{ formatPrecio(producto.precio) }}</td>
+              <td class="number">{{ producto.stock }}</td>
+              @if (isAdmin()) {
+                <td>
+                  <div class="actions">
+                    <button type="button" (click)="editProduct(producto)" [disabled]="saving()">Editar</button>
+                    <button type="button" class="danger" (click)="deleteProduct(producto)" [disabled]="saving()">Eliminar</button>
+                  </div>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="isAdmin() ? 5 : 4">No hay productos disponibles.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <a routerLink="/dashboard">Volver al dashboard</a>
+</main>

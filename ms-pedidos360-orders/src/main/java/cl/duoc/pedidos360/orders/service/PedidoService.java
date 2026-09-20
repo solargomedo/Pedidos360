@@ -35,6 +35,25 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
+    public Pedido actualizarPedido(Long id, Pedido datos) {
+        Pedido pedido = buscarPedidoPorId(id);
+
+        if (pedido.getEstado() != EstadoPedido.CREADO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Solo se pueden editar pedidos en estado CREADO");
+        }
+
+        if (datos.getProductoId() == null || datos.getProductoId() <= 0
+                || datos.getCantidad() == null || datos.getCantidad() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "productoId y cantidad deben ser obligatorios y mayores que 0");
+        }
+
+        pedido.setProductoId(datos.getProductoId());
+        pedido.setCantidad(datos.getCantidad());
+        return pedidoRepository.save(pedido);
+    }
+
     public Pedido cambiarEstado(Long id, EstadoPedido nuevoEstado) {
         Pedido pedido = buscarPedidoPorId(id);
         EstadoPedido estadoActual = pedido.getEstado();

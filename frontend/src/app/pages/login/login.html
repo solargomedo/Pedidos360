@@ -1,0 +1,12 @@
+﻿<main>
+  <h1>Pedidos360</h1>
+  <p>Accede con tu cuenta de Microsoft.</p>
+  @if (account) {
+    <a routerLink="/dashboard">Ir al dashboard</a>
+  } @else {
+    <button type="button" (click)="login()" [disabled]="redirecting()">Iniciar sesión</button>
+  }
+  @if (errorMessage()) {
+    <p class="error" role="alert">{{ errorMessage() }}</p>
+  }
+</main>

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,6 +42,12 @@ public class PedidoController {
     @ResponseStatus(HttpStatus.CREATED)
     public Pedido crearPedido(@Valid @RequestBody Pedido pedido) {
         return pedidoService.crearPedido(pedido);
+    }
+
+    @PutMapping("/{id}")
+    public Pedido actualizarPedido(@PathVariable("id") Long id,
+            @Valid @RequestBody Pedido pedido) {
+        return pedidoService.actualizarPedido(id, pedido);
     }
 
     @PatchMapping("/{id}/estado")
