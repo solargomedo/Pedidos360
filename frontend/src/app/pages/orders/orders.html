@@ -1,72 +1,166 @@
 ﻿<main>
   <h1>Pedidos</h1>
 
+  <!-- Los tres roles pueden crear pedidos -->
   <section aria-labelledby="nuevo-pedido">
     <h2 id="nuevo-pedido">Nuevo pedido</h2>
+
     <form #pedidoForm="ngForm" (ngSubmit)="createOrder(pedidoForm)">
       <fieldset [disabled]="saving() || loading()">
+
         <label for="producto-id">Producto ID</label>
-        <input id="producto-id" name="productoId" type="number" step="any" required [(ngModel)]="productoId" />
+        <input
+          id="producto-id"
+          name="productoId"
+          type="number"
+          step="1"
+          min="1"
+          required
+          [(ngModel)]="productoId"
+        />
+
         <label for="cantidad">Cantidad</label>
-        <input id="cantidad" name="cantidad" type="number" step="any" required [(ngModel)]="cantidad" />
-        <button type="submit" [disabled]="pedidoForm.invalid">Crear pedido</button>
+        <input
+          id="cantidad"
+          name="cantidad"
+          type="number"
+          step="1"
+          min="1"
+          required
+          [(ngModel)]="cantidad"
+        />
+
+        <button type="submit" [disabled]="pedidoForm.invalid">
+          Crear pedido
+        </button>
+
       </fieldset>
     </form>
   </section>
 
   @if (successMessage()) {
-    <p class="success" role="status">{{ successMessage() }}</p>
+    <p class="success" role="status">
+      {{ successMessage() }}
+    </p>
   }
+
   @if (errorMessage()) {
-    <p class="error" role="alert">{{ errorMessage() }}</p>
+    <p class="error" role="alert">
+      {{ errorMessage() }}
+    </p>
   }
+
   @if (saving()) {
     <p role="status">Guardando pedido...</p>
   }
 
-  @if (loading()) {
-    <p role="status">Cargando pedidos...</p>
-  } @else if (pedidos().length || !errorMessage()) {
-    <div class="table-container">
-      <table>
-        <caption>Listado de pedidos</caption>
-        <thead>
-          <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Producto ID</th>
-            <th scope="col" class="number">Cantidad</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Cambiar estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (pedido of pedidos(); track pedido.id) {
+  <!-- Admin y Operador pueden consultar y gestionar todos los pedidos -->
+  @if (isAdmin() || isOperador()) {
+
+    @if (loading()) {
+
+      <p role="status">Cargando pedidos...</p>
+
+    } @else if (pedidos().length || !errorMessage()) {
+
+      <div class="table-container">
+
+        <table>
+
+          <caption>Listado de pedidos</caption>
+
+          <thead>
             <tr>
-              <td>{{ pedido.id }}</td>
-              <td>{{ pedido.productoId }}</td>
-              <td class="number">{{ pedido.cantidad }}</td>
-              <td>{{ pedido.estado }}</td>
-              <td>
-                <div class="state-action">
-                  <select [attr.aria-label]="'Nuevo estado del pedido ' + pedido.id"
-                    [(ngModel)]="estadosSeleccionados[pedido.id]" [disabled]="saving()">
-                    @for (estado of estados; track estado) {
-                      <option [value]="estado">{{ estado }}</option>
-                    }
-                  </select>
-                  <button type="button" (click)="changeState(pedido)" [disabled]="saving()">Cambiar estado</button>
-                </div>
-              </td>
+              <th scope="col">ID</th>
+              <th scope="col">Producto ID</th>
+              <th scope="col" class="number">Cantidad</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Cambiar estado</th>
             </tr>
-          } @empty {
-            <tr>
-              <td colspan="5">No hay pedidos</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+
+          <tbody>
+
+            @for (pedido of pedidos(); track pedido.id) {
+
+              <tr>
+
+                <td>{{ pedido.id }}</td>
+
+                <td>{{ pedido.productoId }}</td>
+
+                <td class="number">
+                  {{ pedido.cantidad }}
+                </td>
+
+                <td>
+                  {{ pedido.estado }}
+                </td>
+
+                <td>
+
+                  <div class="state-action">
+
+                    <select
+                      [attr.aria-label]="'Nuevo estado del pedido ' + pedido.id"
+                      [(ngModel)]="estadosSeleccionados[pedido.id]"
+                      [disabled]="saving()"
+                    >
+
+                      @for (estado of estados; track estado) {
+                        <option [value]="estado">
+                          {{ estado }}
+                        </option>
+                      }
+
+                    </select>
+
+                    <button
+                      type="button"
+                      (click)="changeState(pedido)"
+                      [disabled]="saving()"
+                    >
+                      Cambiar estado
+                    </button>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            } @empty {
+
+              <tr>
+                <td colspan="5">
+                  No hay pedidos
+                </td>
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    }
+
   }
 
-  <a routerLink="/dashboard">Volver al dashboard</a>
+  <!-- Temporalmente no mostramos todos los pedidos al Cliente -->
+  @if (isCliente()) {
+
+    <p>
+      Puedes crear nuevos pedidos. El seguimiento de pedidos
+      está restringido a los permisos de tu usuario.
+    </p>
+
+  }
+
+  <a routerLink="/dashboard">
+    Volver al dashboard
+  </a>
+
 </main>

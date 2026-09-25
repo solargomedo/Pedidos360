@@ -23,7 +23,8 @@ export class Catalog implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
   private readonly msalService = inject(MsalService);
-  private readonly catalogUrl = 'http://localhost:8080/api/bff/catalog';
+  readonly catalogUrl =
+  'https://o1kt0r3yj9.execute-api.us-east-1.amazonaws.com/api/bff/catalog';
   readonly isAdmin = signal(false);
   protected readonly saving = signal(false);
   protected readonly successMessage = signal('');

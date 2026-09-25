@@ -1,12 +1,43 @@
 ﻿<main>
+
   <h1>Pedidos360</h1>
-  <p>Bienvenido/a, {{ account?.name || account?.username || 'Usuario' }}</p>
+
+  <p>
+    Bienvenido/a,
+    <strong>
+      {{ account?.name || account?.username || 'Usuario' }}
+    </strong>
+  </p>
+
+  <p>
+    Rol:
+    <strong>{{ role() }}</strong>
+  </p>
+
   <nav aria-label="Navegación principal">
-    <a routerLink="/orders">Pedidos</a>
-    <a routerLink="/catalog">Catálogo</a>
+
+    <a routerLink="/orders">
+      Pedidos
+    </a>
+
+    <a routerLink="/catalog">
+      Catálogo
+    </a>
+
   </nav>
-  <button type="button" (click)="logout()" [disabled]="redirecting()">Cerrar sesión</button>
+
+  <button
+    type="button"
+    (click)="logout()"
+    [disabled]="redirecting()"
+  >
+    {{ redirecting() ? 'Cerrando sesión...' : 'Cerrar sesión' }}
+  </button>
+
   @if (errorMessage()) {
-    <p class="error" role="alert">{{ errorMessage() }}</p>
+    <p class="error" role="alert">
+      {{ errorMessage() }}
+    </p>
   }
+
 </main>

@@ -34,8 +34,10 @@ const msalGuardConfig: MsalGuardConfiguration = {
 const msalInterceptorConfig: MsalInterceptorConfiguration = {
   interactionType: InteractionType.Redirect,
   protectedResourceMap: new Map([
-    ['http://localhost:8080', [apiScope]],
-    ['http://localhost:8080/*', [apiScope]]
+    [
+      'https://o1kt0r3yj9.execute-api.us-east-1.amazonaws.com/*',
+      [apiScope]
+    ]
   ])
 };
 
