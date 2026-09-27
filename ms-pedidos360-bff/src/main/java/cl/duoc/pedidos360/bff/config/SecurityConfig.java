@@ -64,21 +64,27 @@ public class SecurityConfig {
                 .build();
     }
 
-    @Bean
-    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-        configuration.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(
-                List.of("Authorization", "Content-Type"));
+  @Bean
+public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
 
-        // El filtro CORS resuelve el preflight antes de la autenticacion JWT.
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+    configuration.setAllowedOrigins(List.of(
+            "http://localhost:4200",
+            "https://solargomedo.github.io"
+    ));
 
-        return source;
-    }
+    configuration.setAllowedMethods(
+            List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+    configuration.setAllowedHeaders(
+            List.of("Authorization", "Content-Type"));
+
+    // El filtro CORS resuelve el preflight antes de la autenticacion JWT.
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+
+    return source;
+}
 
     private JwtAuthenticationConverter jwtAuthenticationConverter() {
 

@@ -1,19 +1,104 @@
-﻿main {
-  max-width: 56rem;
-  margin: 2rem auto;
-  padding: 1.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+﻿/* ===== Catálogo Pedidos360 ===== */
+
+:host {
+  display: block;
+  min-height: 100vh;
+  padding: 1px;
+  position: relative;
+
+  background:
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(96, 165, 250, 0.30) 0,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(147, 197, 253, 0.40) 0,
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      #dbeafe 0%,
+      #eff6ff 40%,
+      #bfdbfe 75%,
+      #93c5fd 100%
+    );
+}
+
+/* Tarjeta principal */
+main {
+  position: relative;
+  z-index: 1;
+
+  max-width: 70rem;
+  margin: 4rem auto;
+  padding: 2.5rem 3rem;
+
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+
+  box-shadow:
+    0 20px 50px rgba(30, 64, 175, 0.15),
+    0 5px 15px rgba(15, 23, 42, 0.06);
+
   overflow-wrap: anywhere;
 }
 
 h1 {
-  margin-top: 0;
+  margin: 0 0 2rem;
+  color: #17365d;
+  font-size: 2.4rem;
 }
 
+/* Secciones */
+section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+/* Formulario */
+fieldset {
+  display: grid;
+  gap: 1rem;
+  max-width: 28rem;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+}
+
+input {
+  min-width: 0;
+  padding: 0.75rem;
+
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+
+  font: inherit;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Tabla */
 .table-container {
   overflow-x: auto;
   margin-bottom: 1.5rem;
+
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
 }
 
 table {
@@ -22,19 +107,30 @@ table {
 }
 
 caption {
+  padding: 1rem;
   text-align: left;
-  margin-bottom: 0.75rem;
-}
 
-th,
-td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #d1d5db;
-  text-align: left;
+  color: #17365d;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 th {
-  background: #f3f4f6;
+  padding: 0.85rem;
+
+  background: #17365d;
+  color: white;
+
+  text-align: left;
+}
+
+td {
+  padding: 0.85rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+tbody tr:hover {
+  background: #eff6ff;
 }
 
 .number {
@@ -43,51 +139,36 @@ th {
   font-variant-numeric: tabular-nums;
 }
 
-a {
-  color: #185abd;
-}
+/* Botones */
+button {
+  padding: 0.7rem 1rem;
 
-a:focus-visible {
-  outline: 3px solid #1f2937;
-  outline-offset: 3px;
-}
-
-.error {
-  color: #b91c1c;
-}
-
-section {
-  margin-bottom: 1.5rem;
-}
-
-fieldset {
-  display: grid;
-  gap: 0.75rem;
-  max-width: 24rem;
-  margin: 0;
-  padding: 0;
   border: 0;
-}
+  border-radius: 7px;
 
-input,
-button {
-  padding: 0.65rem;
-  border: 1px solid #9ca3af;
-  border-radius: 0.25rem;
-  font: inherit;
-}
-
-input {
-  min-width: 0;
-}
-
-button {
-  background: #185abd;
+  background: #2563eb;
   color: white;
+
+  font: inherit;
+  font-weight: 600;
+
   cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
 }
 
 button.danger {
+  background: #dc2626;
+}
+
+button.danger:hover {
   background: #b91c1c;
 }
 
@@ -95,19 +176,70 @@ button:disabled,
 fieldset:disabled button {
   opacity: 0.6;
   cursor: default;
+  transform: none;
 }
 
-input:focus-visible,
-button:focus-visible {
-  outline: 3px solid #1f2937;
-  outline-offset: 3px;
-}
-
+/* Acciones de la tabla */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
+/* Volver */
+a {
+  display: inline-block;
+  margin-top: 0.5rem;
+
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Mensajes */
+.error {
+  padding: 0.7rem 1rem;
+
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+
+  color: #b91c1c;
+}
+
 .success {
+  padding: 0.7rem 1rem;
+
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 7px;
+
   color: #166534;
+}
+
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  main {
+    margin: 2rem 1rem;
+    padding: 1.5rem;
+  }
+
+  section {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
 }
