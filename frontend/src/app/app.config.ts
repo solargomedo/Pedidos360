@@ -22,7 +22,7 @@ export const msalInstance = new PublicClientApplication({
   auth: {
     clientId: '19a44cff-a68d-49ca-8210-9f1fe6b4fb2a',
     authority: 'https://login.microsoftonline.com/7d9b0753-76e0-4904-bc68-abb1c917b695',
-    redirectUri: 'http://localhost:4200'
+    redirectUri: window.location.origin + (window.location.hostname === 'localhost' ? '' : '/Pedidos360/')
   }
 });
 

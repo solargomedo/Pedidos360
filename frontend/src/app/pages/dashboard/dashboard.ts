@@ -113,7 +113,7 @@ export class Dashboard implements OnInit {
 
     this.msalService.logoutRedirect({
       account: this.account,
-      postLogoutRedirectUri: 'http://localhost:4200'
+      postLogoutRedirectUri: window.location.origin + (window.location.hostname === 'localhost' ? '' : '/Pedidos360/')
     }).subscribe({
       error: () => {
         this.redirecting.set(false);
