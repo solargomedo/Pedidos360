@@ -8,16 +8,23 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import cl.duoc.pedidos360.orders.messaging.PedidoProducer;
 
 @Service
 public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final CatalogClient catalogClient;
+    private final PedidoProducer pedidoProducer;
 
-    public PedidoService(PedidoRepository pedidoRepository, CatalogClient catalogClient) {
+    public PedidoService(
+            PedidoRepository pedidoRepository,
+            CatalogClient catalogClient,
+            PedidoProducer pedidoProducer) {
+
         this.pedidoRepository = pedidoRepository;
         this.catalogClient = catalogClient;
+        this.pedidoProducer = pedidoProducer;
     }
 
     public List<Pedido> listarPedidos() {
@@ -32,7 +39,14 @@ public class PedidoService {
 
     public Pedido crearPedido(Pedido pedido) {
         pedido.setEstado(EstadoPedido.CREADO);
-        return pedidoRepository.save(pedido);
+
+        // Primero guardamos el pedido en PostgreSQL
+        Pedido pedidoGuardado = pedidoRepository.save(pedido);
+
+        // Después enviamos una notificación a RabbitMQ
+        pedidoProducer.enviarPedidoCreado(pedidoGuardado.getId());
+
+        return pedidoGuardado;
     }
 
     public Pedido actualizarPedido(Long id, Pedido datos) {
