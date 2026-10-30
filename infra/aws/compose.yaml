@@ -1,0 +1,138 @@
+name: pedidos360-aws
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pedidos360
+      POSTGRES_USER: ${POSTGRES_USER:?Definir POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - datos
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  catalog:
+    image: pedidos360-catalog:local
+    pull_policy: never
+    restart: "no"
+    environment:
+      SPRING_CONFIG_LOCATION: classpath:/application.properties
+      SPRING_PROFILES_ACTIVE: integracion-test
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pedidos360
+      SPRING_DATASOURCE_USERNAME: pedidos360_catalog_app
+      SPRING_DATASOURCE_PASSWORD: ${CATALOG_DB_PASSWORD:?Definir CATALOG_DB_PASSWORD existente}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_SQL_INIT_MODE: never
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "3"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_PORT: "8082"
+      DEBUG: "false"
+      TRACE: "false"
+      JAVA_TOOL_OPTIONS: -XX:InitialRAMPercentage=10.0 -XX:MaxRAMPercentage=60.0 -XX:+ExitOnOutOfMemoryError
+    mem_limit: 512m
+    cpus: 0.50
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - datos
+      - aplicacion
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8082"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  orders:
+    image: pedidos360-orders:local
+    pull_policy: never
+    restart: "no"
+    environment:
+      SPRING_CONFIG_LOCATION: classpath:/application.properties
+      SPRING_PROFILES_ACTIVE: integracion-test
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pedidos360_orders
+      SPRING_DATASOURCE_USERNAME: pedidos360_orders_app
+      SPRING_DATASOURCE_PASSWORD: ${ORDERS_DB_PASSWORD:?Definir ORDERS_DB_PASSWORD existente}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_SQL_INIT_MODE: never
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "3"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      CATALOG_SERVICE_URL: http://catalog:8082
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: ${INTEGRATION_RABBITMQ_USER:?Definir usuario exclusivo del broker nuevo}
+      RABBITMQ_PASSWORD: ${INTEGRATION_RABBITMQ_PASSWORD:?Definir clave exclusiva del broker nuevo}
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${INTEGRATION_RABBITMQ_VHOST:?Definir vhost exclusivo del broker nuevo}
+      SPRING_RABBITMQ_LISTENER_TYPE: simple
+      SPRING_RABBITMQ_LISTENER_SIMPLE_ACKNOWLEDGE_MODE: manual
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      PEDIDOS360_DLQ_CONSUMER_ENABLED: "false"
+      SERVER_PORT: "8081"
+      DEBUG: "false"
+      TRACE: "false"
+      JAVA_TOOL_OPTIONS: -XX:InitialRAMPercentage=10.0 -XX:MaxRAMPercentage=60.0 -XX:+ExitOnOutOfMemoryError
+    mem_limit: 512m
+    cpus: 0.50
+    depends_on:
+      postgres:
+        condition: service_healthy
+      catalog:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - datos
+      - aplicacion
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8081"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  rabbitmq:
+    hostname: 6ce32d690a78
+    image: rabbitmq:4.1-management
+    restart: "no"
+    stop_grace_period: 60s
+    environment:
+      RABBITMQ_DEFAULT_USER: ${INTEGRATION_RABBITMQ_USER:?Definir usuario exclusivo del broker nuevo}
+      RABBITMQ_DEFAULT_PASS: ${INTEGRATION_RABBITMQ_PASSWORD:?Definir clave exclusiva del broker nuevo}
+      RABBITMQ_DEFAULT_VHOST: ${INTEGRATION_RABBITMQ_VHOST:?Definir vhost exclusivo del broker nuevo}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit vm_memory_high_watermark {absolute,419430400}"
+    mem_limit: 768m
+    cpus: 0.50
+    volumes:
+      - rabbitmq_integration_data:/var/lib/rabbitmq
+    networks:
+      - aplicacion
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 45s
+
+volumes:
+  postgres_data:
+  rabbitmq_integration_data:
+
+networks:
+  datos:
+    driver: bridge
+    internal: true
+  aplicacion:
+    driver: bridge
+    internal: true
