@@ -50,8 +50,9 @@ export class Orders implements OnInit {
 
   protected estadosSeleccionados: Record<number, string> = {};
 
-  readonly ordersUrl =
-    'https://o1kt0r3yj9.execute-api.us-east-1.amazonaws.com/api/bff/orders';
+  // API Gateway AWS - Pedidos360 EP2
+readonly ordersUrl =
+  'https://mtdgm9u772.execute-api.us-east-1.amazonaws.com/api/bff/orders';
 
   ngOnInit(): void {
     this.detectRole();

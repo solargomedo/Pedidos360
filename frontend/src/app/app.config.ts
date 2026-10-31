@@ -1,3 +1,4 @@
+
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
@@ -18,6 +19,8 @@ import { routes } from './app.routes';
 
 const apiScope = 'api://6faf8448-cd68-430c-a4f6-4ac7726e5faa/access_as_user';
 
+const apiGatewayUrl = 'https://mtdgm9u772.execute-api.us-east-1.amazonaws.com';
+
 export const msalInstance = new PublicClientApplication({
   auth: {
     clientId: '19a44cff-a68d-49ca-8210-9f1fe6b4fb2a',
@@ -35,7 +38,11 @@ const msalInterceptorConfig: MsalInterceptorConfiguration = {
   interactionType: InteractionType.Redirect,
   protectedResourceMap: new Map([
     [
-      'https://o1kt0r3yj9.execute-api.us-east-1.amazonaws.com/*',
+      'http://localhost:8080/*',
+      [apiScope]
+    ],
+    [
+      `${apiGatewayUrl}/*`,
       [apiScope]
     ]
   ])
