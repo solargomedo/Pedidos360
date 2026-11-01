@@ -104,7 +104,7 @@ services:
 
   rabbitmq:
     hostname: 6ce32d690a78
-    image: rabbitmq:4.1-management
+    image: rabbitmq:4.1.8-management
     restart: "no"
     stop_grace_period: 60s
     environment:
@@ -117,7 +117,8 @@ services:
     volumes:
       - rabbitmq_integration_data:/var/lib/rabbitmq
     networks:
-      - aplicacion
+      aplicacion:
+        aliases: [rabbitmq, rabbit1, 6ce32d690a78]
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
       interval: 15s
@@ -125,9 +126,104 @@ services:
       retries: 10
       start_period: 45s
 
+  rabbit2:
+    image: rabbitmq:4.1.8-management
+    hostname: rabbit2
+    restart: "no"
+    stop_grace_period: 60s
+    environment:
+      RABBITMQ_NODENAME: rabbit@rabbit2
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit vm_memory_high_watermark {absolute,419430400}"
+    entrypoint: ["/bin/sh", "/opt/pedidos360/start-rabbit2.sh"]
+    command: ["rabbitmq-server"]
+    secrets:
+      - rabbitmq_cluster_cookie
+    volumes:
+      - rabbit2_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbit2.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/start-rabbit2.sh:/opt/pedidos360/start-rabbit2.sh:ro
+    mem_limit: 768m
+    cpus: 0.50
+    networks:
+      - aplicacion
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  bff:
+    image: pedidos360-bff:local
+    pull_policy: never
+    restart: "no"
+    environment:
+      SPRING_CONFIG_LOCATION: classpath:/application.properties
+      SPRING_PROFILES_ACTIVE: integracion-test
+      CATALOG_SERVICE_URL: http://catalog:8082
+      ORDERS_SERVICE_URL: http://orders:8081
+      SERVER_PORT: "8080"
+      DEBUG: "false"
+      TRACE: "false"
+      JAVA_TOOL_OPTIONS: -XX:InitialRAMPercentage=10.0 -XX:MaxRAMPercentage=60.0 -XX:+ExitOnOutOfMemoryError
+    mem_limit: 512m
+    cpus: 0.50
+    depends_on:
+      catalog:
+        condition: service_healthy
+      orders:
+        condition: service_healthy
+    networks:
+      - aplicacion
+      - bff_salida
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  rabbitmq-admin:
+    image: pedidos360-rabbitmq-admin:local
+    pull_policy: never
+    restart: "no"
+    environment:
+      SPRING_CONFIG_LOCATION: classpath:/application.properties
+      SPRING_PROFILES_ACTIVE: integracion-test
+      RABBITMQ_MANAGEMENT_URL: http://rabbitmq:15672
+      RABBITMQ_MANAGEMENT_USERNAME: ${INTEGRATION_RABBITMQ_USER:?Definir usuario existente con acceso Management}
+      RABBITMQ_PASSWORD: ${INTEGRATION_RABBITMQ_PASSWORD:?Definir clave existente del broker}
+      RABBITMQ_MANAGEMENT_VHOST: ${INTEGRATION_RABBITMQ_VHOST:?Definir vhost de integracion existente}
+      ENTRA_JWT_ISSUER_URI: ${ENTRA_JWT_ISSUER_URI:?Definir issuer real existente de Entra}
+      ENTRA_JWT_AUDIENCE: ${ENTRA_JWT_AUDIENCE:?Definir audiencia real existente de la API}
+      SERVER_PORT: "8083"
+      DEBUG: "false"
+      TRACE: "false"
+      JAVA_TOOL_OPTIONS: -XX:InitialRAMPercentage=10.0 -XX:MaxRAMPercentage=60.0 -XX:+ExitOnOutOfMemoryError
+    mem_limit: 512m
+    cpus: 0.50
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - aplicacion
+      - admin_salida
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8083"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
 volumes:
   postgres_data:
   rabbitmq_integration_data:
+  rabbit2_data:
 
 networks:
   datos:
@@ -136,3 +232,14 @@ networks:
   aplicacion:
     driver: bridge
     internal: true
+  bff_salida:
+    driver: bridge
+    internal: false
+
+  admin_salida:
+    driver: bridge
+    internal: false
+
+secrets:
+  rabbitmq_cluster_cookie:
+    file: ${RABBITMQ_CLUSTER_COOKIE_FILE:?Definir ruta externa de la cookie EXISTENTE}

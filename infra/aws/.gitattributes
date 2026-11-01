@@ -1,1 +1,3 @@
 postgres/init/*.sh text eol=lf
+
+rabbitmq/*.sh text eol=lf

@@ -25,6 +25,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
 
+                        .requestMatchers("/api/bff/rabbitmq/monitor", "/api/bff/rabbitmq/monitor/**")
+                        .hasRole("Admin")
+
+                        .requestMatchers("/api/bff/rabbitmq/events", "/api/bff/rabbitmq/events/**")
+                        .hasRole("Admin")
+
                         // PEDIDOS
                         .requestMatchers(HttpMethod.POST, "/api/bff/orders")
                         .hasAnyRole("Cliente", "Operador", "Admin")

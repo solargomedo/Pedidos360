@@ -1,0 +1,30 @@
+<section class="activity" aria-labelledby="activity-title">
+  <header><div><h2 id="activity-title">Actividad de mensajes</h2>
+    <p>Historial en memoria: máximo 1000 eventos por instancia. Se pierde al reiniciar Orders.</p></div>
+    <button type="button" (click)="refresh()" [disabled]="loading() || hidden()">{{ loading() ? 'Consultando…' : 'Actualizar actividad' }}</button>
+  </header>
+  <form (submit)="$event.preventDefault(); applyFilter()">
+    <label for="pedido-filter">ID de pedido (opcional)</label>
+    <div class="filter"><input id="pedido-filter" name="pedidoId" inputmode="numeric" [value]="draft"
+      (input)="draft = $any($event.target).value" placeholder="Todos los pedidos">
+      <button type="submit">Aplicar filtro</button></div>
+  </form>
+  @if (filterError()) { <p role="alert" class="failure">{{ filterError() }}</p> }
+  <p aria-live="polite">Última consulta correcta: {{ updatedAt() ? (updatedAt() | date:'dd/MM/yyyy HH:mm:ss') : '—' }} · Hora local.
+    {{ hidden() ? 'Actualización pausada: pestaña oculta.' : 'Consulta cada 5 s; espera progresiva ante errores.' }}</p>
+  @if (restart()) { <p role="status" class="notice">Cambió la instancia de Orders: pudo reiniciarse. Se descartó el historial anterior y se reinició el cursor.</p> }
+  @if (retention()) { <p role="status" class="notice">Hay un salto por retención; pueden faltar eventos anteriores.</p> }
+  @if (error()) { <p role="alert" class="failure">{{ error() }}</p> }
+  @if (loading() && !attempted()) { <p role="status">Cargando actividad…</p> }
+  <div class="scroll"><table><thead><tr><th>Fecha y hora</th><th>Pedido</th><th>Evento</th><th>Exchange / routing key</th><th>Cola / consumidor</th><th>Intento</th><th>Resultado</th></tr></thead>
+    <tbody>@for (event of events(); track event.eventId) {
+      <tr><td>{{ event.timestamp | date:'dd/MM/yyyy HH:mm:ss.SSS' }}</td><td>{{ event.pedidoId ?? '—' }}</td>
+        <td><span class="badge" [class]="'badge ' + tone(event.type)">{{ event.type }}</span></td>
+        <td>{{ event.exchange ?? '—' }}<small>{{ event.routingKey ?? '—' }}</small></td>
+        <td>{{ event.queue ?? '—' }}<small>{{ event.consumer ?? '—' }}</small></td>
+        <td>{{ event.attempt ?? '—' }}</td><td>{{ event.result }}</td></tr>
+    } @empty { <tr><td colspan="7">{{ error() ? 'Actividad no disponible.' : 'Sin eventos recibidos para esta consulta.' }}</td></tr> }</tbody>
+  </table></div>
+  <p>Más recientes primero. PUBLICATION_REQUESTED indica una solicitud, no publicación confirmada.
+    ACK_SENT registra el envío del ACK de consumo; NACK_SENT no demuestra llegada a una DLQ.</p>
+</section>

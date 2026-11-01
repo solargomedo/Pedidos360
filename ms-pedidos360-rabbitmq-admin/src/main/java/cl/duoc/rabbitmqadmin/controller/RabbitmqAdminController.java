@@ -13,96 +13,103 @@ import java.util.Map;
 @RequestMapping("/api/admin/rabbitmq")
 public class RabbitmqAdminController {
 
-    private final RabbitmqAdminService service;
+        private final RabbitmqAdminService service;
 
-    public RabbitmqAdminController(RabbitmqAdminService service) {
-        this.service = service;
-    }
+        public RabbitmqAdminController(RabbitmqAdminService service) {
+                this.service = service;
+        }
 
-    @PostMapping("/queues")
-    public ResponseEntity<Map<String, String>> crearCola(
-            @RequestBody Map<String, String> request) {
+        @GetMapping("/monitor")
+        public ResponseEntity<cl.duoc.rabbitmqadmin.dto.RabbitmqMonitor> monitor() {
+                var result = service.monitor();
+                return ResponseEntity.status("unavailable".equals(result.status()) ? 503 : 200)
+                        .cacheControl(org.springframework.http.CacheControl.noStore()).body(result);
+        }
 
-        String nombre = request.get("nombre");
+        @PostMapping("/queues")
+        public ResponseEntity<Map<String, String>> crearCola(
+                        @RequestBody Map<String, String> request) {
 
-        service.crearCola(nombre);
+                String nombre = request.get("nombre");
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "mensaje", "Cola creada correctamente",
-                        "nombre", nombre));
-    }
+                service.crearCola(nombre);
 
-    @PostMapping("/exchanges")
-    public ResponseEntity<Map<String, String>> crearExchange(
-            @RequestBody Map<String, String> request) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(Map.of(
+                                                "mensaje", "Cola creada correctamente",
+                                                "nombre", nombre));
+        }
 
-        String nombre = request.get("nombre");
-        String tipo = request.get("tipo");
+        @PostMapping("/exchanges")
+        public ResponseEntity<Map<String, String>> crearExchange(
+                        @RequestBody Map<String, String> request) {
 
-        service.crearExchange(nombre, tipo);
+                String nombre = request.get("nombre");
+                String tipo = request.get("tipo");
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "mensaje", "Exchange creado correctamente",
-                        "nombre", nombre,
-                        "tipo", tipo));
-    }
+                service.crearExchange(nombre, tipo);
 
-    @DeleteMapping("/exchanges/{nombre}")
-    public ResponseEntity<Map<String, String>> eliminarExchange(
-            @PathVariable String nombre) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(Map.of(
+                                                "mensaje", "Exchange creado correctamente",
+                                                "nombre", nombre,
+                                                "tipo", tipo));
+        }
 
-        service.eliminarExchange(nombre);
+        @DeleteMapping("/exchanges/{nombre}")
+        public ResponseEntity<Map<String, String>> eliminarExchange(
+                        @PathVariable String nombre) {
 
-        return ResponseEntity.ok(Map.of(
-                "mensaje", "Exchange eliminado correctamente",
-                "nombre", nombre));
-    }
+                service.eliminarExchange(nombre);
 
-    @PostMapping("/bindings")
-    public ResponseEntity<Map<String, String>> crearBinding(
-            @RequestBody Map<String, String> request) {
+                return ResponseEntity.ok(Map.of(
+                                "mensaje", "Exchange eliminado correctamente",
+                                "nombre", nombre));
+        }
 
-        String exchange = request.get("exchange");
-        String cola = request.get("cola");
-        String routingKey = request.get("routingKey");
+        @PostMapping("/bindings")
+        public ResponseEntity<Map<String, String>> crearBinding(
+                        @RequestBody Map<String, String> request) {
 
-        service.crearBinding(exchange, cola, routingKey);
+                String exchange = request.get("exchange");
+                String cola = request.get("cola");
+                String routingKey = request.get("routingKey");
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "mensaje", "Binding creado correctamente",
-                        "exchange", exchange,
-                        "cola", cola,
-                        "routingKey", routingKey));
-    }
+                service.crearBinding(exchange, cola, routingKey);
 
-    @DeleteMapping("/bindings")
-    public ResponseEntity<Map<String, String>> eliminarBinding(
-            @RequestBody Map<String, String> request) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(Map.of(
+                                                "mensaje", "Binding creado correctamente",
+                                                "exchange", exchange,
+                                                "cola", cola,
+                                                "routingKey", routingKey));
+        }
 
-        String exchange = request.get("exchange");
-        String cola = request.get("cola");
-        String routingKey = request.get("routingKey");
+        @DeleteMapping("/bindings")
+        public ResponseEntity<Map<String, String>> eliminarBinding(
+                        @RequestBody Map<String, String> request) {
 
-        service.eliminarBinding(exchange, cola, routingKey);
+                String exchange = request.get("exchange");
+                String cola = request.get("cola");
+                String routingKey = request.get("routingKey");
 
-        return ResponseEntity.ok(Map.of(
-                "mensaje", "Binding eliminado correctamente",
-                "exchange", exchange,
-                "cola", cola,
-                "routingKey", routingKey));
-    }
+                service.eliminarBinding(exchange, cola, routingKey);
 
-    @DeleteMapping("/queues/{nombre}")
-    public ResponseEntity<Map<String, String>> eliminarCola(
-            @PathVariable String nombre) {
+                return ResponseEntity.ok(Map.of(
+                                "mensaje", "Binding eliminado correctamente",
+                                "exchange", exchange,
+                                "cola", cola,
+                                "routingKey", routingKey));
+        }
 
-        service.eliminarCola(nombre);
+        @DeleteMapping("/queues/{nombre}")
+        public ResponseEntity<Map<String, String>> eliminarCola(
+                        @PathVariable String nombre) {
 
-        return ResponseEntity.ok(Map.of(
-                "mensaje", "Cola eliminada correctamente",
-                "nombre", nombre));
-    }
+                service.eliminarCola(nombre);
+
+                return ResponseEntity.ok(Map.of(
+                                "mensaje", "Cola eliminada correctamente",
+                                "nombre", nombre));
+        }
 }

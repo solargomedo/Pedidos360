@@ -17,26 +17,41 @@ import org.springframework.web.util.UriUtils;
 public class RabbitmqAdminService {
 
         private final RestClient restClient;
+        private final String vhostCodificado;
 
         public RabbitmqAdminService(
                         @Value("${rabbitmq.management.url}") String url,
                         @Value("${rabbitmq.management.username}") String username,
-                        @Value("${rabbitmq.management.password}") String password) {
+                        @Value("${rabbitmq.management.password}") String password,
+                        @Value("${rabbitmq.management.vhost}") String vhost) {
+
+                if (vhost == null || vhost.isBlank()) {
+                        throw new IllegalArgumentException("El vhost RabbitMQ es obligatorio");
+                }
+                this.vhostCodificado = UriUtils.encodePathSegment(vhost, StandardCharsets.UTF_8);
 
                 // Forzamos HTTP/1.1 para comunicarnos con RabbitMQ.
                 HttpClient httpClient = HttpClient.newBuilder()
+                                .connectTimeout(java.time.Duration.ofSeconds(2))
                                 .version(HttpClient.Version.HTTP_1_1)
                                 .build();
+
+                JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+                requestFactory.setReadTimeout(java.time.Duration.ofSeconds(3));
 
                 this.restClient = RestClient.builder()
                                 .baseUrl(url)
                                 .requestFactory(
-                                                new JdkClientHttpRequestFactory(httpClient))
+                                                requestFactory)
                                 .defaultHeaders(headers -> headers.setBasicAuth(
                                                 username,
                                                 password,
                                                 StandardCharsets.UTF_8))
                                 .build();
+        }
+
+        public cl.duoc.rabbitmqadmin.dto.RabbitmqMonitor monitor() {
+                return new RabbitmqMonitorReader(restClient, vhostCodificado).read();
         }
 
         // Crear una cola en RabbitMQ
@@ -72,7 +87,7 @@ public class RabbitmqAdminService {
 
                 restClient.put()
                                 .uri(URI.create(
-                                                "/api/exchanges/%2F/" + nombreCodificado))
+                                                "/api/exchanges/" + vhostCodificado + "/" + nombreCodificado))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .body(Map.of(
                                                 "type", tipo,
@@ -97,7 +112,7 @@ public class RabbitmqAdminService {
 
                 restClient.delete()
                                 .uri(URI.create(
-                                                "/api/exchanges/%2F/" + nombreCodificado
+                                                "/api/exchanges/" + vhostCodificado + "/" + nombreCodificado
                                                                 + "?if-unused=true"))
                                 .retrieve()
                                 .toBodilessEntity();
@@ -122,7 +137,7 @@ public class RabbitmqAdminService {
                 String colaCodificada = UriUtils.encodePathSegment(
                                 cola, StandardCharsets.UTF_8);
 
-                String ruta = "/api/bindings/%2F/e/"
+                String ruta = "/api/bindings/" + vhostCodificado + "/e/"
                                 + exchangeCodificado
                                 + "/q/"
                                 + colaCodificada;
@@ -167,7 +182,7 @@ public class RabbitmqAdminService {
 
                 restClient.delete()
                                 .uri(URI.create(
-                                                "/api/bindings/%2F/e/"
+                                                "/api/bindings/" + vhostCodificado + "/e/"
                                                                 + exchangeCodificado
                                                                 + "/q/"
                                                                 + colaCodificada
@@ -204,7 +219,7 @@ public class RabbitmqAdminService {
                                 nombre, StandardCharsets.UTF_8);
 
                 return URI.create(
-                                "/api/queues/%2F/" + nombreCodificado);
+                                "/api/queues/" + vhostCodificado + "/" + nombreCodificado);
         }
 
         // Validar que el nombre de la cola sea correcto.

@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DeadLetterConsumer {
+    private final MessagingEventHistory history;
+
+    public DeadLetterConsumer(MessagingEventHistory history) { this.history = history; }
 
     private static final Logger log =
             LoggerFactory.getLogger(DeadLetterConsumer.class);
@@ -21,10 +24,14 @@ public class DeadLetterConsumer {
     public void recibirNotificacionFallida(
             String mensaje, Message message, Channel channel) throws IOException {
 
+        var observation = history.receivedContext(mensaje, message, RabbitMQConfig.NOTIFICACIONES_DLQ, "DeadLetterConsumer");
+        history.record(observation, null, MessagingEvent.Type.RECEIVED, MessagingEvent.Result.OBSERVED);
+
         log.warn("Mensaje fallido en cola {}: {}",
                 RabbitMQConfig.NOTIFICACIONES_DLQ, mensaje);
 
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        history.record(observation, null, MessagingEvent.Type.ACK_SENT, MessagingEvent.Result.SENT);
     }
 
     @RabbitListener(
@@ -33,10 +40,14 @@ public class DeadLetterConsumer {
     public void recibirComprobanteFallido(
             String mensaje, Message message, Channel channel) throws IOException {
 
+        var observation = history.receivedContext(mensaje, message, RabbitMQConfig.COMPROBANTES_DLQ, "DeadLetterConsumer");
+        history.record(observation, null, MessagingEvent.Type.RECEIVED, MessagingEvent.Result.OBSERVED);
+
         log.warn("Mensaje fallido en cola {}: {}",
                 RabbitMQConfig.COMPROBANTES_DLQ, mensaje);
 
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        history.record(observation, null, MessagingEvent.Type.ACK_SENT, MessagingEvent.Result.SENT);
     }
 
     @RabbitListener(
@@ -45,9 +56,13 @@ public class DeadLetterConsumer {
     public void recibirEventoFallido(
             String mensaje, Message message, Channel channel) throws IOException {
 
+        var observation = history.receivedContext(mensaje, message, RabbitMQConfig.AUDITORIA_DLQ, "DeadLetterConsumer");
+        history.record(observation, null, MessagingEvent.Type.RECEIVED, MessagingEvent.Result.OBSERVED);
+
         log.warn("Mensaje fallido en cola {}: {}",
                 RabbitMQConfig.AUDITORIA_DLQ, mensaje);
 
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        history.record(observation, null, MessagingEvent.Type.ACK_SENT, MessagingEvent.Result.SENT);
     }
 }

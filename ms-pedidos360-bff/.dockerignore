@@ -1,0 +1,27 @@
+# Deny by default; include only Maven metadata and main application sources.
+**
+!pom.xml
+!src/
+!src/main/
+!src/main/java/
+!src/main/java/**
+!src/main/resources/
+!src/main/resources/**
+
+# Never send local credentials, secret files or backups to the build context.
+**/application-local.*
+**/.env
+**/.env.*
+**/secrets
+**/secrets/**
+**/backups
+**/backups/**
+**/*.dump
+**/*.backup
+**/*.sql
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.jks
+**/*.keystore

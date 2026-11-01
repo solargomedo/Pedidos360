@@ -85,6 +85,34 @@ class SecurityConfigTest {
         verifyNoInteractions(rabbitmqAdminService);
     }
 
+    @Test
+    void monitorRequiresJwt() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/admin/rabbitmq/monitor"))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(rabbitmqAdminService);
+    }
+
+    @Test
+    void monitorRejectsOperator() throws Exception {
+        when(jwtDecoder.decode("operator")).thenReturn(jwtWithRole("operator", "Operador"));
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/admin/rabbitmq/monitor")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer operator"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(rabbitmqAdminService);
+    }
+
+    @Test
+    void monitorAllowsAdmin() throws Exception {
+        when(jwtDecoder.decode("admin")).thenReturn(jwtWithRole("admin", "Admin"));
+        when(rabbitmqAdminService.monitor()).thenReturn(new cl.duoc.rabbitmqadmin.dto.RabbitmqMonitor(
+                Instant.now(), "unavailable", null, List.of(), List.of(), null));
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/admin/rabbitmq/monitor")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer admin"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
+        verify(rabbitmqAdminService).monitor();
+    }
+
     private Jwt jwtWithRole(String marker, String role) {
         Instant now = Instant.now();
         return Jwt.withTokenValue(marker)

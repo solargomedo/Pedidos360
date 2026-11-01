@@ -1,1 +1,3 @@
 /infra/rabbitmq/.env
+/infra/rabbitmq/rabbitmq-definitions.json
+infra/rabbitmq/secrets/
