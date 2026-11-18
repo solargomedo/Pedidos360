@@ -1,0 +1,157 @@
+name: pedidos360-kafka
+
+x-zookeeper: &zookeeper
+  image: confluentinc/cp-zookeeper:7.9.11
+  restart: "no"
+  mem_limit: 512m
+  cpus: 0.50
+  stop_grace_period: 30s
+  networks: [kafka]
+  healthcheck:
+    test: [CMD, cub, zk-ready, localhost, "2181"]
+    interval: 15s
+    timeout: 10s
+    retries: 12
+    start_period: 30s
+
+x-zookeeper-env: &zookeeper-env
+  ZOOKEEPER_CLIENT_PORT: "2181"
+  ZOOKEEPER_TICK_TIME: "2000"
+  ZOOKEEPER_INIT_LIMIT: "10"
+  ZOOKEEPER_SYNC_LIMIT: "5"
+  ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+  ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: "3"
+  ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "1"
+  KAFKA_HEAP_OPTS: -Xms128m -Xmx256m
+
+x-broker: &broker
+  image: confluentinc/cp-kafka:7.9.11
+  restart: "no"
+  mem_limit: 1536m
+  cpus: 1.0
+  stop_grace_period: 60s
+  networks: [kafka]
+  depends_on:
+    zookeeper-1: {condition: service_healthy}
+    zookeeper-2: {condition: service_healthy}
+    zookeeper-3: {condition: service_healthy}
+  healthcheck:
+    test: [CMD-SHELL, 'kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1']
+    interval: 20s
+    timeout: 15s
+    retries: 12
+    start_period: 60s
+
+x-broker-env: &broker-env
+  KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+  KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+  KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+  KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+  KAFKA_NUM_PARTITIONS: "3"
+  KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+  KAFKA_MIN_INSYNC_REPLICAS: "2"
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "3"
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "3"
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "2"
+  KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
+  KAFKA_LOG_CLEANUP_POLICY: delete
+  KAFKA_LOG_RETENTION_MS: "604800000"
+  KAFKA_LOG_RETENTION_BYTES: "268435456"
+  KAFKA_LOG_SEGMENT_BYTES: "67108864"
+  KAFKA_LOG_ROLL_MS: "3600000"
+  KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: "300000"
+  KAFKA_HEAP_OPTS: -Xms256m -Xmx768m
+
+services:
+  zookeeper-1:
+    <<: *zookeeper
+    hostname: zookeeper-1
+    environment:
+      <<: *zookeeper-env
+      ZOOKEEPER_SERVER_ID: "1"
+    volumes:
+      - zk1_data:/var/lib/zookeeper/data
+      - zk1_log:/var/lib/zookeeper/log
+  zookeeper-2:
+    <<: *zookeeper
+    hostname: zookeeper-2
+    environment:
+      <<: *zookeeper-env
+      ZOOKEEPER_SERVER_ID: "2"
+    volumes:
+      - zk2_data:/var/lib/zookeeper/data
+      - zk2_log:/var/lib/zookeeper/log
+  zookeeper-3:
+    <<: *zookeeper
+    hostname: zookeeper-3
+    environment:
+      <<: *zookeeper-env
+      ZOOKEEPER_SERVER_ID: "3"
+    volumes:
+      - zk3_data:/var/lib/zookeeper/data
+      - zk3_log:/var/lib/zookeeper/log
+
+  kafka-1:
+    <<: *broker
+    hostname: kafka-1
+    environment:
+      <<: *broker-env
+      KAFKA_BROKER_ID: "1"
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9092,EXTERNAL://localhost:19092
+    ports: ["127.0.0.1:19092:29092"]
+    volumes:
+      - kafka1_data:/var/lib/kafka/data
+      - ./create-topics.sh:/opt/pedidos360/create-topics.sh:ro
+  kafka-2:
+    <<: *broker
+    hostname: kafka-2
+    environment:
+      <<: *broker-env
+      KAFKA_BROKER_ID: "2"
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:9092,EXTERNAL://localhost:19093
+    ports: ["127.0.0.1:19093:29092"]
+    volumes:
+      - kafka2_data:/var/lib/kafka/data
+  kafka-3:
+    <<: *broker
+    hostname: kafka-3
+    environment:
+      <<: *broker-env
+      KAFKA_BROKER_ID: "3"
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:9092,EXTERNAL://localhost:19094
+    ports: ["127.0.0.1:19094:29092"]
+    volumes:
+      - kafka3_data:/var/lib/kafka/data
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    restart: "no"
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      JAVA_OPTS: -Xms128m -Xmx256m
+      KAFKA_CLUSTERS_0_NAME: pedidos360
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      DYNAMIC_CONFIG_ENABLED: "false"
+    ports: ["127.0.0.1:18080:8080"]
+    networks: [kafka]
+    depends_on:
+      kafka-1: {condition: service_healthy}
+      kafka-2: {condition: service_healthy}
+      kafka-3: {condition: service_healthy}
+
+networks:
+  kafka:
+    driver: bridge
+
+volumes:
+  zk1_data:
+  zk1_log:
+  zk2_data:
+  zk2_log:
+  zk3_data:
+  zk3_log:
+  kafka1_data:
+  kafka2_data:
+  kafka3_data:

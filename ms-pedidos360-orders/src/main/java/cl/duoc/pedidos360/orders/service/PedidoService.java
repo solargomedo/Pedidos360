@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import cl.duoc.pedidos360.orders.messaging.PedidoProducer;
+import cl.duoc.pedidos360.orders.messaging.kafka.PedidoKafkaProducer;
+import cl.duoc.pedidos360.orders.dto.PedidoEvento;
 
 @Service
 public class PedidoService {
@@ -16,15 +18,18 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final CatalogClient catalogClient;
     private final PedidoProducer pedidoProducer;
+    private final PedidoKafkaProducer kafkaProducer;
 
     public PedidoService(
             PedidoRepository pedidoRepository,
             CatalogClient catalogClient,
-            PedidoProducer pedidoProducer) {
+            PedidoProducer pedidoProducer,
+            PedidoKafkaProducer kafkaProducer) {
 
         this.pedidoRepository = pedidoRepository;
         this.catalogClient = catalogClient;
         this.pedidoProducer = pedidoProducer;
+        this.kafkaProducer = kafkaProducer;
     }
 
     public List<Pedido> listarPedidos() {
@@ -45,6 +50,7 @@ public class PedidoService {
 
         // Después enviamos una notificación a RabbitMQ
         pedidoProducer.enviarPedidoCreado(pedidoGuardado.getId());
+        kafkaProducer.publicar(PedidoEvento.de(pedidoGuardado, PedidoEvento.Tipo.CREADO));
 
         return pedidoGuardado;
     }
@@ -65,7 +71,9 @@ public class PedidoService {
 
         pedido.setProductoId(datos.getProductoId());
         pedido.setCantidad(datos.getCantidad());
-        return pedidoRepository.save(pedido);
+        Pedido guardado = pedidoRepository.save(pedido);
+        kafkaProducer.publicar(PedidoEvento.de(guardado, PedidoEvento.Tipo.ACTUALIZADO));
+        return guardado;
     }
 
     public Pedido cambiarEstado(Long id, EstadoPedido nuevoEstado) {
@@ -93,7 +101,9 @@ public class PedidoService {
         }
 
         pedido.setEstado(nuevoEstado);
-        return pedidoRepository.save(pedido);
+        Pedido guardado = pedidoRepository.save(pedido);
+        kafkaProducer.publicar(PedidoEvento.de(guardado, PedidoEvento.Tipo.ESTADO_CAMBIADO));
+        return guardado;
     }
 
     public void eliminarPedido(Long id) {
