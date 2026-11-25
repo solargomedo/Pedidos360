@@ -1,4 +1,4 @@
-# Kafka para Pedidos360 — EP5 y EP6
+# Kafka para Pedidos360 · EP3
 
 Infraestructura independiente: tres ZooKeeper, tres brokers y Kafka UI. No cambia
 RabbitMQ, PostgreSQL, microservicios ni el Compose AWS. Los comandos siguientes
@@ -7,8 +7,7 @@ Desktop en modo contenedores Linux y Docker Compose moderno.
 
 Se fijan `confluentinc/cp-kafka:7.9.11`, `confluentinc/cp-zookeeper:7.9.11`
 y `provectuslabs/kafka-ui:v0.7.2`. La línea 7.9 permite el modo ZooKeeper requerido;
-no sustituir por imágenes Kafka 4.x/KRaft. Las imágenes no se descargan durante
-la validación estática. Su descarga y arranque quedan pendientes de ejecución.
+la configuración depende del modo ZooKeeper. Ver [EC2](../aws/EP3-EC2.md) para el despliegue reportado y [Orders](../../ms-pedidos360-orders/KAFKA.md) para eventos, grupos y offsets.
 
 ## Validar sin iniciar
 
@@ -26,7 +25,7 @@ Ejecutar solamente cuando se autorice el arranque:
 
 ```sh
 docker compose -f infra/kafka/docker-compose.yml up -d --wait --wait-timeout 300
-docker compose -f infra/kafka/docker-compose.yml exec -T kafka-1 bash /opt/pedidos360/create-topics.sh
+bash infra/kafka/create-topics.sh
 ```
 
 Ejecutar el segundo comando solo si el primero termina correctamente. El script
@@ -45,7 +44,7 @@ Git conserva LF en el script; se invoca con Bash, sin requerir permiso ejecutabl
 Se elimina por el primer límite alcanzado, por segmentos, no inmediatamente al
 cumplir el límite: segmentos de 64 MiB, rotación temporal de 1 hora y revisión de
 retención cada 5 minutos. Ambos tópicos tienen `min.insync.replicas=2`;
-los futuros productores deben usar `acks=all` para aplicar esa garantía.
+el productor de Orders usa `acks=all` para aplicar esa garantía.
 Los tópicos internos de offsets y transacciones también tienen replicación 3.
 
 ## Puertos y conectividad
@@ -62,7 +61,7 @@ correspondiente del host; INTERNAL se usa entre brokers y por Kafka UI. Cada
 ZooKeeper utiliza 2181 para clientes, 2888 para quorum y 3888 para elección,
 exclusivamente dentro de Docker, sin publicar estos puertos.
 
-Para futuras aplicaciones Spring Boot ejecutadas localmente:
+Para Orders en el host:
 
 ```properties
 spring.kafka.bootstrap-servers=localhost:19092,localhost:19093,localhost:19094
@@ -74,24 +73,7 @@ Para aplicaciones en contenedores unidos a `pedidos360-kafka_kafka`:
 spring.kafka.bootstrap-servers=kafka-1:9092,kafka-2:9092,kafka-3:9092
 ```
 
-Un futuro Compose de aplicaciones puede declarar esta red mediante:
-
-```yaml
-networks:
-  kafka:
-    external: true
-    name: pedidos360-kafka_kafka
-```
-
-El servicio de la aplicación debe incluir `kafka` en sus redes; la red tiene que
-existir antes de iniciarlo. No se modifica ni conecta ahora ningún contenedor
-existente. `localhost` dentro de un contenedor apunta al propio contenedor.
-
-Todos los puertos publicados se vinculan a `127.0.0.1`, sin conflictos con
-8080–8083, 5672, 15672 o 5432. No usar `-p` ni cambiar `COMPOSE_PROJECT_NAME`:
-el nombre fijo mantiene la red y los volúmenes del proyecto. El acceso remoto no
-está configurado. PLAINTEXT y Kafka UI sin autenticación se destinan a esta
-evaluación local; no publicar estos endpoints directamente en AWS.
+[compose.kafka.yaml](../aws/compose.kafka.yaml) une Orders a la red externa. Los listeners internos sirven a brokers, Kafka UI y Orders. Los externos se anuncian en loopback. Para acceder a Kafka UI en EC2, usar [el túnel SSH](../aws/EP3-EC2.md#6-kafka-ui-y-capacidad). PLAINTEXT solo se utiliza en las redes controladas. Mantener el nombre real del proyecto para reutilizar sus volúmenes.
 
 ## Inspección y verificación
 
@@ -117,8 +99,7 @@ políticas de la tabla y `min.insync.replicas=2`.
 Abrir `http://localhost:18080`: cluster `pedidos360`, secciones Brokers y Topics.
 Verificar los tres brokers y las particiones/réplicas de ambos tópicos. El estado
 del contenedor UI por sí solo no demuestra conectividad del navegador ni salud
-de los tópicos. El CLI anterior consulta el listener interno; la conexión externa
-debe verificarse posteriormente desde la aplicación local, todavía sin implementar.
+de los tópicos. El CLI anterior consulta el listener interno. ISR identifica las réplicas sincronizadas. Con acks=all y min.insync.replicas=2, una partición con menos de dos réplicas sincronizadas rechaza nuevas publicaciones con esa política.
 
 ## Detener y volver a iniciar conservando datos
 
@@ -127,7 +108,7 @@ docker compose -f infra/kafka/docker-compose.yml stop -t 60 kafka-ui kafka-1 kaf
 docker compose -f infra/kafka/docker-compose.yml stop -t 30 zookeeper-1 zookeeper-2 zookeeper-3
 ```
 
-Para volver a iniciar, repetir los dos comandos de la sección de inicio.
+Para volver a iniciar contenedores existentes, ejecutar el primer comando de la sección de inicio con --no-recreate. Consultar los tópicos existentes mediante describe.
 No ejecutar `down`, `down -v`, `rm` ni `prune`. Hay nueve volúmenes propios:
 dos por ZooKeeper (datos y log) y uno por broker; sus nombres llevan el prefijo
 `pedidos360-kafka_`. No se reutilizan volúmenes de otros entornos.
@@ -136,16 +117,11 @@ dos por ZooKeeper (datos y log) y uno por broker; sus nombres llevan el prefijo
 
 | Componente | Cantidad | Límite por contenedor | Heap máximo | CPU máxima por contenedor |
 |---|---:|---:|---:|---:|
-| ZooKeeper | 3 | 512 MiB | 256 MiB | 0.5 |
-| Kafka | 3 | 1536 MiB | 768 MiB | 1 |
-| Kafka UI | 1 | 512 MiB | 256 MiB | 0.5 |
+| ZooKeeper | 3 | 384 MiB | 192 MiB | 0.5 |
+| Kafka | 3 | 1024 MiB | 512 MiB | 1 |
+| Kafka UI | 1 | 384 MiB | 192 MiB | 0.5 |
 
-Los límites suman **6656 MiB (6.5 GiB)** y 5 CPU, sin contar Docker, sistema
-operativo ni aplicaciones existentes. Como presupuesto inicial de laboratorio,
-asignar al menos 8 GiB y 4 CPU a Docker; con RabbitMQ, PostgreSQL y Spring Boot
-simultáneos, prever 10–12 GiB para Docker y un host de al menos 16 GiB. Estos
-valores requieren medición, no son capacidad validada. Una instancia de 2 GiB
-no alcanza para esta configuración.
+Los límites actuales suman **4608 MiB (4,5 GiB)** y 5 vCPU en cuotas agregadas. La EC2 t3.large reportada tiene 2 vCPU y 8 GiB y comparte recursos con PostgreSQL, RabbitMQ y los servicios. Medir memoria, CPU y créditos para evaluar el margen de operación. El límite de memoria por contenedor y el heap máximo miden cosas distintas.
 
 La retención de los dos tópicos equivale nominalmente a 4.5 GiB contando las
 tres réplicas; segmentos activos, logs internos, ZooKeeper e imágenes agregan

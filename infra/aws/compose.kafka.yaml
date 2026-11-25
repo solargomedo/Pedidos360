@@ -1,0 +1,16 @@
+services:
+  orders:
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      KAFKA_LISTENERS_ENABLED: "true"
+      KAFKA_SEGUIMIENTO_ENABLED: "${KAFKA_SEGUIMIENTO_ENABLED:-true}"
+      KAFKA_EVENTOS_GROUP: "${KAFKA_EVENTOS_GROUP:-pedidos360-orders-eventos}"
+      KAFKA_ANALITICA_GROUP: "${KAFKA_ANALITICA_GROUP:-pedidos360-orders-analitica-proyeccion-v1}"
+      KAFKA_SEGUIMIENTO_GROUP: "${KAFKA_SEGUIMIENTO_GROUP:-pedidos360-orders-seguimiento}"
+    networks:
+      kafka_ep3: {}
+
+networks:
+  kafka_ep3:
+    external: true
+    name: "${KAFKA_DOCKER_NETWORK:-pedidos360-kafka_kafka}"

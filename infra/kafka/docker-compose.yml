@@ -3,7 +3,7 @@ name: pedidos360-kafka
 x-zookeeper: &zookeeper
   image: confluentinc/cp-zookeeper:7.9.11
   restart: "no"
-  mem_limit: 512m
+  mem_limit: 384m
   cpus: 0.50
   stop_grace_period: 30s
   networks: [kafka]
@@ -22,12 +22,12 @@ x-zookeeper-env: &zookeeper-env
   ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
   ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: "3"
   ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "1"
-  KAFKA_HEAP_OPTS: -Xms128m -Xmx256m
+  KAFKA_HEAP_OPTS: -Xms128m -Xmx192m
 
 x-broker: &broker
   image: confluentinc/cp-kafka:7.9.11
   restart: "no"
-  mem_limit: 1536m
+  mem_limit: 1024m
   cpus: 1.0
   stop_grace_period: 60s
   networks: [kafka]
@@ -61,7 +61,7 @@ x-broker-env: &broker-env
   KAFKA_LOG_SEGMENT_BYTES: "67108864"
   KAFKA_LOG_ROLL_MS: "3600000"
   KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: "300000"
-  KAFKA_HEAP_OPTS: -Xms256m -Xmx768m
+  KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
 
 services:
   zookeeper-1:
@@ -127,10 +127,10 @@ services:
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
     restart: "no"
-    mem_limit: 512m
+    mem_limit: 384m
     cpus: 0.50
     environment:
-      JAVA_OPTS: -Xms128m -Xmx256m
+      JAVA_OPTS: -Xms128m -Xmx192m
       KAFKA_CLUSTERS_0_NAME: pedidos360
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
       DYNAMIC_CONFIG_ENABLED: "false"

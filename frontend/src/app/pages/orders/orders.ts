@@ -4,12 +4,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { FormsModule, NgForm } from '@angular/forms';
 import { MsalService } from '@azure/msal-angular';
+import { catchError, EMPTY, exhaustMap, timer } from 'rxjs';
+import { ordersUrl } from './orders-url';
 
 export interface Pedido {
   id: number;
   productoId: number;
   cantidad: number;
   estado: string;
+}
+
+interface AnaliticaPedidos {
+  totalPedidosProcesados: number;
+  totalUnidadesSolicitadas: number;
+  pedidosPorEstado: Record<string, number>;
 }
 
 @Component({
@@ -31,6 +39,8 @@ export class Orders implements OnInit {
   protected readonly isCliente = signal(false);
 
   protected readonly pedidos = signal<Pedido[]>([]);
+  protected readonly analitica = signal<AnaliticaPedidos | null>(null);
+  protected readonly errorAnalitica = signal(false);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
@@ -50,9 +60,7 @@ export class Orders implements OnInit {
 
   protected estadosSeleccionados: Record<number, string> = {};
 
-  // API Gateway AWS - Pedidos360 EP2
-readonly ordersUrl =
-  'https://mtdgm9u772.execute-api.us-east-1.amazonaws.com/api/bff/orders';
+  readonly ordersUrl = ordersUrl;
 
   ngOnInit(): void {
     this.detectRole();
@@ -157,6 +165,7 @@ readonly ordersUrl =
               this.isOperador()
             ) {
               this.loadOrders();
+              this.pollAnalitica();
             } else {
               this.loading.set(false);
             }
@@ -180,6 +189,21 @@ readonly ordersUrl =
           this.loading.set(false);
         }
       });
+  }
+
+  private pollAnalitica(): void {
+    timer(0, 5000).pipe(
+      exhaustMap(() => this.http.get<AnaliticaPedidos>(`${this.ordersUrl}/analitica`).pipe(
+        catchError(() => {
+          this.errorAnalitica.set(true);
+          return EMPTY;
+        })
+      )),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(analitica => {
+      this.analitica.set(analitica);
+      this.errorAnalitica.set(false);
+    });
   }
 
   /**

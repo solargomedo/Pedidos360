@@ -1,1 +1,46 @@
 /infra/rabbitmq/.env
+
+# Entornos y credenciales locales
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.pgpass
+*.jwt
+*.token
+jwt.txt
+token.txt
+tokens.txt
+secrets/
+
+# Respaldos, exportaciones y archivos temporales
+backups/
+exports/
+*.dump
+*.pgdump
+*.backup
+*.bak
+*.tmp
+*.swp
+*.sql.gz
+*.sql.bz2
+*.sql.zip
+*.sql.zst
+*.tar
+*.tar.gz
+*.tgz
+*inspect*.json
+*env-backup*
+/pedidos360-orders-kafka-ep5-backup.json
+
+# Dependencias y salida generada
+node_modules/
+dist/
+target/
+coverage/
+.angular/
+out-tsc/
+*.log

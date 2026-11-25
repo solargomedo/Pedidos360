@@ -57,6 +57,47 @@
   <!-- Admin y Operador pueden consultar y gestionar todos los pedidos -->
   @if (isAdmin() || isOperador()) {
 
+    <section aria-labelledby="analitica-kafka">
+      <h2 id="analitica-kafka">Analítica de eventos Kafka</h2>
+
+      @if (analitica(); as datos) {
+        <p><strong>{{ datos.totalPedidosProcesados }}</strong> pedidos procesados</p>
+        <p><strong>{{ datos.totalUnidadesSolicitadas }}</strong> unidades solicitadas</p>
+
+        <div class="table-container">
+          <table>
+            <caption>Pedidos por estado</caption>
+            <thead>
+              <tr>
+                <th scope="col">Estado</th>
+                <th scope="col" class="number">Pedidos</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (estado of estados; track estado) {
+                <tr>
+                  <td>{{ estado }}</td>
+                  <td class="number">{{ datos.pedidosPorEstado[estado] }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else if (!errorAnalitica()) {
+        <p role="status">Cargando indicadores de Kafka…</p>
+      }
+
+      @if (errorAnalitica()) {
+        <p class="error" role="status">
+          @if (analitica()) {
+            No se pudieron actualizar los indicadores. Se muestran los últimos datos disponibles.
+          } @else {
+            Los indicadores no están disponibles. Se volverán a consultar automáticamente.
+          }
+        </p>
+      }
+    </section>
+
     @if (loading()) {
 
       <p role="status">Cargando pedidos...</p>

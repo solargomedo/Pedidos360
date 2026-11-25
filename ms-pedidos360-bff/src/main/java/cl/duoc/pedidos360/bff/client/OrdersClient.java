@@ -33,6 +33,20 @@ public class OrdersClient {
                 .toEntity(String.class));
     }
 
+    public ResponseEntity<String> getOrderAnalytics() {
+        return sanitizeErrorResponse(restClient.get()
+                .uri("/api/orders/analitica")
+                .retrieve()
+                .toEntity(String.class));
+    }
+
+    public ResponseEntity<String> getOrderTracking(String id) {
+        return sanitizeErrorResponse(restClient.get()
+                .uri("/api/orders/seguimiento/{id}", id)
+                .retrieve()
+                .toEntity(String.class));
+    }
+
     public ResponseEntity<String> createOrder(String body) {
         return sanitizeErrorResponse(restClient.post()
                 .uri("/api/orders")

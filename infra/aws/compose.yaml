@@ -1,6 +1,30 @@
 name: pedidos360-aws
 
 services:
+  bff:
+    image: pedidos360-bff:local
+    pull_policy: never
+    environment:
+      PORT: "8080"
+      ORDERS_SERVICE_URL: http://orders:8081
+      CATALOG_SERVICE_URL: http://catalog:8082
+    ports:
+      - "127.0.0.1:18085:8080"
+    depends_on:
+      orders:
+        condition: service_healthy
+      catalog:
+        condition: service_healthy
+    networks:
+      - aplicacion
+      - bff_salida
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -130,6 +154,9 @@ volumes:
   rabbitmq_integration_data:
 
 networks:
+  bff_salida:
+    driver: bridge
+    internal: false
   datos:
     driver: bridge
     internal: true

@@ -37,6 +37,16 @@ public class BffController {
         return ordersClient.getOrder(id);
     }
 
+    @GetMapping("/orders/analitica")
+    public ResponseEntity<String> getOrderAnalytics() {
+        return ordersClient.getOrderAnalytics();
+    }
+
+    @GetMapping("/orders/seguimiento/{id}")
+    public ResponseEntity<String> getOrderTracking(@PathVariable("id") String id) {
+        return ordersClient.getOrderTracking(id);
+    }
+
     @PostMapping(value = "/orders", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createOrder(@RequestBody String body) {
         return ordersClient.createOrder(body);

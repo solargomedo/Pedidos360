@@ -1,5 +1,8 @@
 # Integracion local Pedidos360 y preparacion para EC2
 
+> Esta guía conserva el procedimiento de integración local. Para el despliegue EP3 reportado en Ubuntu t3.large, seguir [EP3-EC2](EP3-EC2.md). El RabbitMQ individual de este Compose corresponde al laboratorio local. El clúster AWS tiene dos nodos y se administra con su configuración vigente.
+
+
 Este Compose prepara PostgreSQL, Catalog, Orders y un RabbitMQ independiente.
 Su edicion y validacion no crean recursos. El inicio requiere autorizacion separada.
 Los comandos se ejecutan desde la raiz del repositorio. Los ejemplos con stdin

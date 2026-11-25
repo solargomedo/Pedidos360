@@ -44,6 +44,15 @@
               ],
               "outputHashing": "all"
             },
+            "local": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [{
+                "replace": "src/app/pages/orders/orders-url.ts",
+                "with": "src/app/pages/orders/orders-url.local.ts"
+              }]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -57,6 +66,9 @@
           "configurations": {
             "production": {
               "buildTarget": "frontend-pedidos360:build:production"
+            },
+            "local": {
+              "buildTarget": "frontend-pedidos360:build:local"
             },
             "development": {
               "buildTarget": "frontend-pedidos360:build:development"

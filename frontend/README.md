@@ -1,4 +1,12 @@
-# FrontendPedidos360
+# Frontend Angular · Pedidos360
+
+Angular 21.2.x, RxJS y MSAL. Entra ID emite el access token para el scope `access_as_user`. El interceptor MSAL agrega el Bearer JWT y el BFF aplica permisos por rol.
+
+Desde frontend, usar npm ci y npm start. El modo predeterminado y producción usan API Gateway. Para probar Pedidos con BFF en localhost:8080, usar `npm start -- --configuration local --host localhost`. Ese modo cambia solo la URL de Pedidos. Catálogo conserva Gateway. Ejecutar `npm test -- --watch=false` y npm run build para validar.
+
+Admin y Operador ven pedidos procesados por Kafka, unidades y conteo por estado. El polling consulta al abrir la vista y luego cada cinco segundos. timer genera el intervalo, exhaustMap evita solapamiento, catchError conserva el último resultado y takeUntilDestroyed cancela al salir. Cliente puede crear pedidos y carece del permiso de lectura de analítica. El seguimiento individual se demuestra por API.
+
+Ver [demostración](../DEMO-EP3.md). Las referencias generales de Angular CLI se conservan a continuación.
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.24.
 

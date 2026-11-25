@@ -1,9 +1,9 @@
-# Administrador Kafka — EP5
+# Administrador Kafka · herramienta independiente
 
 Microservicio independiente con Java 17 y Spring Boot 4.1.1. Administra tópicos
 mediante un único Kafka AdminClient con cierre al apagar y timeout configurable.
 No necesita Orders, RabbitMQ, PostgreSQL ni conexión directa a ZooKeeper.
-No crea ni altera tópicos al arrancar.
+No crea ni altera tópicos al arrancar. La demo EP3 usa Kafka UI y el CLI, y no requiere desplegar este servicio. Ver [DEMO-EP3](../DEMO-EP3.md).
 
 ## Ejecución desde Git Bash
 
