@@ -1,0 +1,69 @@
+<main>
+  <header>
+    <div><a routerLink="/dashboard">? Dashboard</a><h1>Monitor RabbitMQ</h1>
+      <p>Pedidos360 ? Estado de la mensajer?a</p></div>
+    <button type="button" (click)="refresh()" [disabled]="loading() || hidden()">
+      {{ loading() ? 'Consultando?' : 'Actualizar ahora' }}
+    </button>
+  </header>
+  <section class="summary" aria-live="polite">
+    <strong>Estado general: {{ data()?.status ?? 'Sin informaci?n' }}</strong>
+    <span>{{ hidden() ? 'Actualizaci?n pausada: pesta?a oculta' : 'Consulta autom?tica cada 5 s; espera progresiva ante errores' }}</span>
+    <span>Consulta del servidor: {{ data()?.queriedAt ? (data()?.queriedAt | date:'dd/MM/yyyy HH:mm:ss') : '?' }}</span>
+    <span>?ltima respuesta correcta: {{ receivedAt() ? (receivedAt() | date:'dd/MM/yyyy HH:mm:ss') : '?' }} ? Hora local</span>
+    @if (stale()) { <strong class="warning">Datos sin actualizar. No representan el estado actual del cl?ster.</strong> }
+    @if (data()?.status === 'partial') { <strong class="warning">Informaci?n parcial: algunos recursos no est?n disponibles.</strong> }
+  </section>
+  @if (loading() && !attempted()) { <p role="status">Cargando m?tricas reales?</p> }
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (attempted() && !data()) { <p>No hay datos disponibles del cl?ster.</p> }
+
+  <section class="panel">
+    <h2>Nodos del cl?ster</h2>
+    @if (data()?.nodes?.error) { <p class="warning">{{ data()?.nodes?.error }}</p> }
+    <div class="cards">
+      @for (node of data()?.nodes?.data ?? []; track $index) {
+        <article><h3>{{ node.name }}</h3><p>{{ state(node.running) }}</p>
+          <dl><dt>Alarma de memoria</dt><dd>{{ alarm(node.mem_alarm) }}</dd>
+            <dt>Alarma de disco</dt><dd>{{ alarm(node.disk_free_alarm) }}</dd>
+            <dt>Particiones</dt><dd>{{ node.partitions === null ? '?' : (node.partitions.join(', ') || 'Ninguna reportada') }}</dd></dl>
+        </article>
+      } @empty { <p>Sin informaci?n de nodos.</p> }
+    </div>
+  </section>
+
+  <section class="panel"><h2>Colas principales y DLQ</h2>
+    <div class="scroll"><table><thead><tr><th>Cola</th><th>Estado</th><th>Listos</th><th>Sin confirmar</th><th>Total</th><th>Consumidores</th></tr></thead>
+      <tbody>@for (queue of data()?.queues ?? []; track $index) {
+        <tr><td>{{ queue.data?.name ?? queue.resource }}</td><td>{{ queue.status }} @if (queue.error) { <small>{{ queue.error }}</small> }</td>
+          <td>{{ queue.data?.messages_ready ?? '?' }}</td><td>{{ queue.data?.messages_unacknowledged ?? '?' }}</td>
+          <td>{{ queue.data?.messages ?? '?' }}</td><td>{{ queue.data?.consumers ?? '?' }}</td></tr>
+      } @empty { <tr><td colspan="6">Sin informaci?n de colas.</td></tr> }</tbody></table></div>
+  </section>
+
+  <section class="panel"><h2>Exchanges</h2><div class="cards">
+    @for (exchange of data()?.exchanges ?? []; track $index) {
+      <article><h3>{{ exchange.data?.name ?? exchange.resource }}</h3>
+        <p>Tipo: {{ exchange.data?.type ?? '?' }}</p><p>Durable: {{ exchange.data?.durable == null ? '?' : exchange.data?.durable ? 'S?' : 'No' }}</p>
+        <p>{{ exchange.status }}</p>@if (exchange.error) { <small>{{ exchange.error }}</small> }</article>
+    } @empty { <p>Sin informaci?n de exchanges.</p> }
+  </div></section>
+
+  <section class="panel"><h2>Bindings y routing keys</h2>
+    @if (data()?.bindings?.error) { <p class="warning">{{ data()?.bindings?.error }}</p> }
+    <div class="scroll"><table><thead><tr><th>Exchange origen</th><th>Destino</th><th>Tipo de destino</th><th>Routing key</th></tr></thead>
+      <tbody>@for (binding of data()?.bindings?.data ?? []; track $index) {
+        <tr><td>{{ binding.source }}</td><td>{{ binding.destination }}</td><td>{{ binding.destination_type }}</td><td><code>{{ binding.routing_key === '' ? '(vac?a)' : binding.routing_key }}</code></td></tr>
+      } @empty { <tr><td colspan="4">Sin bindings disponibles.</td></tr> }</tbody></table></div>
+  </section>
+  <app-message-activity />
+  <section class="panel"><h2>C?mo funciona el procesamiento</h2>
+    <p>Diagrama explicativo est?tico. No representa eventos observados ni un historial por pedido.</p>
+    <div class="flow" aria-label="Orders publica en exchange, el exchange enruta a cola y el consumidor procesa">
+      <span>Orders</span><b>?</b><span>Exchange</span><b>?</b><span>Cola</span><b>?</b><span>Consumidor</span>
+    </div>
+    <p><strong>?xito ? ACK:</strong> confirma el procesamiento a RabbitMQ.</p>
+    <p><strong>Error tras los intentos ? NACK sin reencolar ? DLX ? DLQ:</strong> recorrido de rechazo con dead-lettering configurado.</p>
+    <p>La actividad inferior proviene de los eventos observados por Orders; el diagrama sigue siendo explicativo.</p>
+  </section>
+</main>

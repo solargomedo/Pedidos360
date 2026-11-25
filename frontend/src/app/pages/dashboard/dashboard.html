@@ -24,6 +24,9 @@
       Catálogo
     </a>
 
+    @if (isAdmin()) {
+      <a routerLink="/rabbitmq-monitor">Monitor RabbitMQ</a>
+    }
   </nav>
 
   <button

@@ -1,0 +1,27 @@
+# ONLY for a fresh EC2 deployment with new volumes. Never apply to local data.
+services:
+  rabbitmq:
+    hostname: rabbit1
+    environment:
+      RABBITMQ_NODENAME: rabbit@rabbit1
+    entrypoint: ["/bin/sh", "/opt/pedidos360/start-node.sh"]
+    command: ["rabbitmq-server"]
+    secrets:
+      - rabbitmq_cluster_cookie
+      - rabbitmq_definitions
+    volumes:
+      - ./rabbitmq/start-node.sh:/opt/pedidos360/start-node.sh:ro
+      - ./rabbitmq/rabbit1.ec2.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+      aplicacion:
+        aliases: !override [rabbitmq, rabbit1]
+
+  rabbit2:
+    entrypoint: ["/bin/sh", "/opt/pedidos360/start-node.sh"]
+    volumes:
+      - ./rabbitmq/start-node.sh:/opt/pedidos360/start-node.sh:ro
+      - ./rabbitmq/rabbit2.ec2.conf:/etc/rabbitmq/rabbitmq.conf:ro
+
+secrets:
+  rabbitmq_definitions:
+    file: ${RABBITMQ_DEFINITIONS_FILE:?Definir ruta externa de definiciones actualizadas}

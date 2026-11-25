@@ -1,4 +1,6 @@
 /infra/rabbitmq/.env
+/infra/rabbitmq/rabbitmq-definitions.json
+/infra/aws/rabbitmq/rabbitmq-definitions.json
 
 # Entornos y credenciales locales
 .env
